@@ -14,10 +14,12 @@ async def chat(request: Request):
     retrieved_docs = state["retriever"].invoke(question)
 
     if state["use_cloud_llm"]:
+        # 云端智能回答（RAG）
         result = state["rag_chain"].invoke({"input": question})
         answer = result["answer"]
     else:
-        context = "\n\n" + "-"*50 + "\n\n".join([
+        # 纯本地模式：只返回原始片段
+        context = "\n\n" + "-" * 50 + "\n\n".join([
             f"【来源：{d.metadata.get('source', '未知')}】\n{d.page_content}"
             for d in retrieved_docs
         ])
