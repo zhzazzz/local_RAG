@@ -1,39 +1,127 @@
 <!DOCTYPE html>
 <html lang="zh-CN" class="dark">
+
 <head>
     <meta charset="utf-8">
     <title>本地知识库 RAG 系统</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            font-size: 14px !important;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        .message {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .file-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .file-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .sidebar {
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #fixed-logo {
+            position: fixed;
+            top: 16px;
+            left: 20px;
+            z-index: 50;
+        }
+
+        .sidebar-expanded #fixed-logo {
+            left: 280px;
+        }
+
+        #fileList {
+            scrollbar-width: thin;
+            scrollbar-color: #9ca3af transparent;
+        }
+
+        #fileList::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        #fileList::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 20px;
+        }
+
+        .dark #fileList::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+
+        #fileList::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+    </style>
 </head>
+
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
     <!-- 固定 Logo -->
-    <div id="fixed-logo" class="flex items-center gap-3">
-        <i class="fa-solid fa-brain text-3xl text-blue-600"></i>
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">本地知识库</h1>
-            <p class="text-xs text-gray-500 -mt-1">RAG 系统</p>
-        </div>
+    <div id="fixed-logo" class="flex items-center gap-3.5 p-1.5"> <!-- 间距/内边距略缩小 -->
+    <i class="fa-solid fa-brain text-4xl text-blue-600"></i> <!-- 图标从 text-5xl 降到 text-4xl -->
+    <div>
+        <!-- 主标题从 text-3xl 降到 text-2.5xl（或用 text-xl 更保守） -->
+        <h1 class="text-[1.75rem] font-bold text-gray-800 dark:text-white">本地知识库</h1>
+        <!-- 副标题从 text-sm 降到 text-xs，间距微调 -->
+        <p class="text-xs text-gray-500 -mt-1.5">RAG 系统</p>
     </div>
+</div>
 
     <div class="flex h-screen overflow-hidden">
         <!-- 左侧文件列表 -->
-        <div id="sidebar" class="sidebar w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
+        <div id="sidebar"
+            class="sidebar w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
             <div class="p-5 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 pt-16">
-                <h1 class="text-xl font-semibold text-gray-700 dark:text-gray-300">文件列表</h1>
+                <br/>
+                <h1 class="text-xl font-semibold text-gray-700 dark:text-gray-300 text-center">文件列表</h1>
             </div>
 
             <!-- 上传区域 -->
             <div class="p-3 border-t border-gray-200 dark:border-gray-800">
-                <button onclick="document.getElementById('fileUpload').click()" 
-                        class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-medium transition">
+                <button onclick="document.getElementById('fileUpload').click()"
+                    class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-medium transition">
                     <i class="fa-solid fa-upload"></i> 上传新文件
                 </button>
                 <input id="fileUpload" type="file" class="hidden" onchange="handleFileUpload(this.files[0])">
             </div>
 
             <div id="uploadProgress" class="hidden px-3 pb-3">
-                <div class="text-xs text-gray-500 mb-1 flex justify-between"><span>解析进度</span><span id="progressText">0%</span></div>
+                <div class="text-xs text-gray-500 mb-1 flex justify-between"><span>解析进度</span><span
+                        id="progressText">0%</span></div>
                 <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div id="progressBar" class="h-2 bg-blue-600 transition-all duration-300" style="width:0%"></div>
                 </div>
@@ -41,24 +129,31 @@
 
             <div class="p-3 flex-shrink-0">
                 <div class="relative">
-                    <input id="fileSearch" type="text" placeholder="搜索文件..." class="w-full bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-blue-500 rounded-2xl px-4 py-2.5 text-sm focus:outline-none">
+                    <input id="fileSearch" type="text" placeholder="搜索文件..."
+                        class="w-full bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-blue-500 rounded-2xl px-4 py-2.5 text-sm focus:outline-none">
                     <i class="fa-solid fa-magnifying-glass absolute right-4 top-3 text-gray-400"></i>
                 </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-3 min-h-0" id="fileList"></div>
 
-            <div class="p-3 border-t border-gray-200 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400 text-center flex-shrink-0">
+            <div
+                class="p-3 border-t border-gray-200 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400 text-center flex-shrink-0">
                 共 <span id="totalCount" class="font-semibold text-emerald-600">0</span> 个文件
             </div>
         </div>
 
         <!-- 主聊天区 -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <div class="h-14 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-5 flex items-center justify-between flex-shrink-0 pl-80">
+            <!-- 顶部栏 -->
+            <div
+                class="h-14 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-5 flex items-center justify-between flex-shrink-0 pl-80">
                 <div class="flex items-center gap-3">
-                    <button id="toggleBtn" onclick="toggleSidebar()" class="p-3 rounded-2xl hover:bg-blue-50 dark:hover:bg-gray-800 transition">
-                        <i id="sidebarToggleIcon" class="fa-solid fa-chevron-left text-2xl text-gray-700 dark:text-gray-300"></i>
+                    <!-- 收缩按钮（始终可见，贴近左侧） -->
+                    <button id="toggleBtn" onclick="toggleSidebar()"
+                        class="p-3 rounded-2xl hover:bg-blue-50 dark:hover:bg-gray-800 transition">
+                        <i id="sidebarToggleIcon"
+                            class="fa-solid fa-chevron-left text-2xl text-gray-700 dark:text-gray-300"></i>
                     </button>
                 </div>
 
@@ -66,25 +161,35 @@
                     <div class="flex items-center gap-3">
                         <span class="text-sm font-medium">云端模式</span>
                         <label class="relative inline-flex cursor-pointer">
-                            <input type="checkbox" id="cloudToggle" onchange="toggleCloudMode()" checked class="sr-only peer">
-                            <div class="w-10 h-5 bg-gray-300 peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+                            <input type="checkbox" id="cloudToggle" onchange="toggleCloudMode()" checked
+                                class="sr-only peer">
+                            <div
+                                class="w-10 h-5 bg-gray-300 peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5">
+                            </div>
                         </label>
                     </div>
-                    <button onclick="toggleDarkMode()" class="p-2.5 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <button onclick="toggleDarkMode()"
+                        class="p-2.5 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800">
                         <i id="themeIcon" class="fa-solid fa-moon"></i>
                     </button>
-                    <button onclick="clearChat()" class="flex items-center gap-2 px-4 py-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-2xl text-sm font-medium">
+                    <button onclick="clearChat()"
+                        class="flex items-center gap-2 px-4 py-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-2xl text-sm font-medium">
                         <i class="fa-solid fa-trash"></i> 清空
                     </button>
                 </div>
             </div>
 
-            <div id="chat" class="flex-1 overflow-y-auto p-6 chat-container space-y-6 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#374151_1px,transparent_1px)] bg-[length:20px_20px]"></div>
+            <div id="chat"
+                class="flex-1 overflow-y-auto p-6 chat-container space-y-6 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#374151_1px,transparent_1px)] bg-[length:20px_20px]">
+            </div>
 
             <div class="p-5 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
                 <div class="max-w-4xl mx-auto flex gap-3">
-                    <textarea id="input" rows="1" class="flex-1 resize-y max-h-32 bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-blue-500 rounded-3xl px-6 py-4 text-base focus:outline-none" placeholder="输入问题，按 Enter 发送..."></textarea>
-                    <button onclick="sendMessage()" class="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl flex items-center justify-center shadow-lg transition">
+                    <textarea id="input" rows="1"
+                        class="flex-1 resize-y max-h-32 bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-blue-500 rounded-3xl px-6 py-4 text-base focus:outline-none"
+                        placeholder="输入问题，按 Enter 发送..."></textarea>
+                    <button onclick="sendMessage()"
+                        class="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl flex items-center justify-center shadow-lg transition">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </div>
@@ -92,6 +197,221 @@
         </div>
     </div>
 
-    <script src="/static/script.js"></script>
+    <script>
+        let useCloud = true;
+        let filesData = [];
+        let sidebarVisible = true;
+
+        function tailwindInit() { tailwind.config = { content: ["*"], darkMode: 'class' }; }
+
+        function handleFileUpload(file) {
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/kb/upload', true);
+
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    document.getElementById('progressBar').style.width = percent + '%';
+                    document.getElementById('progressText').textContent = percent + '%';
+                }
+            };
+
+            xhr.onload = function () {
+                document.getElementById('uploadProgress').classList.add('hidden');
+                document.getElementById('progressBar').style.width = '0%';
+                if (xhr.status === 200) {
+                    const res = JSON.parse(xhr.responseText);
+                    showToast(res.message);
+                    loadFiles();  // 自动刷新文件列表
+                } else {
+                    showToast('上传失败，请重试');
+                }
+            };
+
+            document.getElementById('uploadProgress').classList.remove('hidden');
+            xhr.send(formData);
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-3 rounded-3xl shadow-2xl flex items-center gap-3 z-50 text-sm';
+            toast.innerHTML = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function addMessage(text, isUser) {
+            const chat = document.getElementById('chat');
+            const div = document.createElement('div');
+            div.className = `flex ${isUser ? 'justify-end' : 'justify-start'} message`;
+            div.innerHTML = `<div class="${isUser ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800'} max-w-[75%] px-5 py-3.5 rounded-3xl rounded-${isUser ? 'br' : 'bl'}-none shadow-sm text-sm">${text.replace(/\n/g, '<br>')}</div>`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+            return div;
+        }
+
+        function showLoading() {
+            const loading = document.createElement('div');
+            loading.id = 'loading';
+            loading.className = 'flex justify-start message';
+            loading.innerHTML = `<div class="bg-gray-100 dark:bg-gray-800 px-5 py-3.5 rounded-3xl flex items-center gap-3 text-sm"><i class="fa-solid fa-spinner animate-spin text-blue-600"></i><span class="text-gray-500 dark:text-gray-400">思考中...</span></div>`;
+            document.getElementById('chat').appendChild(loading);
+            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+            return loading;
+        }
+
+        async function loadFiles(search = '') {
+            const res = await fetch('/kb/files');
+            const data = await res.json();
+            filesData = data.files || [];
+
+            const container = document.getElementById('fileList');
+            container.innerHTML = '';
+
+            const structured = filesData.filter(f => f.path.includes('/Structured/') || f.path.includes('\\Structured\\'));
+            const unstructured = filesData.filter(f => f.path.includes('/Unstructured/') || f.path.includes('\\Unstructured\\'));
+
+            const total = structured.length + unstructured.length;
+            document.getElementById('totalCount').textContent = total;
+
+            const filter = search.toLowerCase();
+            const filteredStructured = structured.filter(f => f.name.toLowerCase().includes(filter));
+            const filteredUnstructured = unstructured.filter(f => f.name.toLowerCase().includes(filter));
+
+            container.innerHTML += `
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3 px-1">
+                        <i class="fa-solid fa-table text-emerald-600"></i>
+                        <h3 class="font-semibold text-emerald-700 dark:text-emerald-400">结构化文件</h3>
+                        <span class="text-xs bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full">${filteredStructured.length}</span>
+                    </div>
+                    <div class="space-y-2" id="structuredList"></div>
+                </div>
+            `;
+            container.innerHTML += `
+                <div>
+                    <div class="flex items-center gap-2 mb-3 px-1">
+                        <i class="fa-solid fa-file-lines text-blue-600"></i>
+                        <h3 class="font-semibold text-blue-700 dark:text-blue-400">非结构化文件</h3>
+                        <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">${filteredUnstructured.length}</span>
+                    </div>
+                    <div class="space-y-2" id="unstructuredList"></div>
+                </div>
+            `;
+
+            const sList = document.getElementById('structuredList');
+            filteredStructured.forEach(f => renderFileCard(sList, f));
+
+            const uList = document.getElementById('unstructuredList');
+            filteredUnstructured.forEach(f => renderFileCard(uList, f));
+        }
+
+        function renderFileCard(parent, f) {
+            let iconClass = 'fa-file-lines text-gray-500';
+            let iconColor = 'text-gray-500';
+            if (f.type === 'pdf') { iconClass = 'fa-file-pdf'; iconColor = 'text-red-500'; }
+            else if (['xlsx', 'xls'].includes(f.type)) { iconClass = 'fa-file-excel'; iconColor = 'text-green-600'; }
+            else if (f.type === 'docx' || f.type === 'doc') { iconClass = 'fa-file-word'; iconColor = 'text-blue-600'; }
+            else if (f.type === 'csv') { iconClass = 'fa-file-csv'; iconColor = 'text-emerald-600'; }
+            else if (['txt', 'md'].includes(f.type)) { iconClass = 'fa-file-lines'; iconColor = 'text-purple-500'; }
+
+            const div = document.createElement('div');
+            div.className = 'file-card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-4 text-sm';
+            div.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <i class="fa-solid ${iconClass} ${iconColor} text-3xl"></i>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium truncate" title="${f.name}">${f.name}</div>
+                        <div class="mt-2 inline-flex items-center gap-2 bg-white dark:bg-gray-700 px-3 py-1 rounded-2xl text-xs font-medium">
+                            <span class="text-emerald-600">${f.chunks}</span>
+                            <span class="text-gray-400">切片</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            parent.appendChild(div);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('sidebarToggleIcon');
+            const logoContainer = document.getElementById('fixed-logo');
+            sidebarVisible = !sidebarVisible;
+
+            if (sidebarVisible) {
+                sidebar.style.width = '256px';
+                icon.classList.replace('fa-chevron-right', 'fa-chevron-left');
+                logoContainer.classList.add('sidebar-expanded');
+            } else {
+                sidebar.style.width = '0px';
+                icon.classList.replace('fa-chevron-left', 'fa-chevron-right');
+                logoContainer.classList.remove('sidebar-expanded');
+            }
+        }
+
+        async function toggleCloudMode() {
+            useCloud = document.getElementById('cloudToggle').checked;
+            await fetch('/kb/set_mode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cloud: useCloud }) });
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 right-6 bg-gray-900 text-white px-5 py-2.5 rounded-3xl shadow-2xl flex items-center gap-3 z-50 text-sm';
+            toast.innerHTML = `已切换为 ${useCloud ? '🟦 联网' : '🟩 本地'}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const icon = document.getElementById('themeIcon');
+            icon.classList.toggle('fa-moon');
+            icon.classList.toggle('fa-sun');
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('input');
+            const question = input.value.trim();
+            if (!question) return;
+            addMessage(question, true);
+            input.value = '';
+            const loading = showLoading();
+            try {
+                const res = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }) });
+                const data = await res.json();
+                loading.remove();
+                const botMsg = addMessage(data.answer, false);
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'absolute -bottom-1 -right-2 text-xs bg-white dark:bg-gray-700 shadow px-3 py-1 rounded-2xl flex items-center gap-1 hover:text-blue-600';
+                copyBtn.innerHTML = `<i class="fa-solid fa-copy"></i>`;
+                copyBtn.onclick = () => { navigator.clipboard.writeText(data.answer); copyBtn.innerHTML = `<i class="fa-solid fa-check text-green-500"></i>`; setTimeout(() => copyBtn.remove(), 1200); };
+                botMsg.querySelector('div').appendChild(copyBtn);
+            } catch (e) {
+                loading.remove();
+                addMessage("❌ 连接失败", false);
+            }
+        }
+
+        function clearChat() {
+            if (confirm('确定清空所有对话？')) document.getElementById('chat').innerHTML = '';
+        }
+
+        window.onload = () => {
+            tailwindInit();
+            const welcome = document.createElement('div');
+            welcome.className = 'flex justify-start message';
+            welcome.innerHTML = `<div class="bg-gray-100 dark:bg-gray-800 px-5 py-3.5 rounded-3xl max-w-md text-sm">👋 你好！我是你的知识库助手</div>`;
+            document.getElementById('chat').appendChild(welcome);
+            loadFiles();
+            document.getElementById('fileSearch').addEventListener('input', e => loadFiles(e.target.value));
+            document.getElementById('input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun');
+            }
+        };
+    </script>
 </body>
+
 </html>

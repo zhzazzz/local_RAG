@@ -23,6 +23,6 @@ async def chat(request: Request):
             f"【来源：{d.metadata.get('source', '未知')}】\n{d.page_content}"
             for d in retrieved_docs
         ])
-        answer = f"【纯本地模式】\n以下是知识库中检索到的相关原始片段（共 {len(retrieved_docs)} 个）：\n{context}"
+        answer = f"【本地模式】\n以下是知识库中检索到的相关原始片段（共 {len(retrieved_docs)} 个）：\n{context}"
 
     return {"answer": answer}
