@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+.message {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.file-card {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.file-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+.sidebar {
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#fixed-logo {
+    position: fixed;
+    top: 16px;
+    left: 20px;
+    z-index: 50;
+}
+
+.sidebar-expanded #fixed-logo {
+    left: 280px;
+}
+
+#fileList {
+    scrollbar-width: thin;
+    scrollbar-color: #9ca3af transparent;
+}
+
+#fileList::-webkit-scrollbar {
+    width: 3px;
+}
+
+#fileList::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 20px;
+}
+
+.dark #fileList::-webkit-scrollbar-thumb {
+    background: #6b7280;
+}
+
+#fileList::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+#toggleBtn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#toggleBtn:hover {
+    transform: scale(1.1);
+    background-color: #eff6ff;
+}
+
+.dark #toggleBtn:hover {
+    background-color: #1f2937;
+}
